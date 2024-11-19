@@ -37,3 +37,29 @@ exports.regsiter = async (req,res)=>{
   }
 }
 
+// login 
+exports.loginPost = async (req, res) => {
+    const { email, password } = req.body;
+    const user = await registerCollection.findOne({ email: email });
+  
+    if (user) {
+      const passwordCheck = await bcrypt.compare(password, user.password);
+      if (passwordCheck) {
+        const id = { id: user._id };
+        const token = jwt.sign(id, process.env.JWT_TOCKEN_SECERT);
+        res.status(200).json({
+          status: "success",
+          data: {
+            id: user._id,
+            email: user.email,
+            roll:user.roll
+          },
+          token: token,
+        });
+      } else {
+        res.status(200).json({ status: "incorrect password" });
+      }
+    } else {
+      res.status(200).json({ status: "userData not fount" });
+    }
+  };
