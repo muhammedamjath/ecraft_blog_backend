@@ -21,10 +21,10 @@ app.use('/public', express.static(path.join(__dirname, 'public')));
 
 const dbConnect = require('./config/connection')
 const authRouter = require('./routes/authRouter')
-// const clientRouter = require('./routes/clientRoute')
+const userRouter = require('./routes/userRoutes')
 
 app.use('/auth',authRouter)
-// app.use('/client',clientRouter)
+app.use('/user',userRouter)
 
 
 
