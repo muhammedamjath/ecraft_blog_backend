@@ -10,7 +10,6 @@ const passwordRejex =
 
 // register
 exports.regsiter = async (req,res)=>{
-    console.log(req.body);
     
     const { name, email, password } = req.body;
   const user = await registerCollection.findOne({ email: email });
@@ -18,8 +17,8 @@ exports.regsiter = async (req,res)=>{
     const hashPas = await bcrypt.hash(password, 10);
 
     let userSignup = new registerCollection({
-      name: name,
-      email: email,
+      name,
+      email,
       password: hashPas,
       roll: "user",
     });

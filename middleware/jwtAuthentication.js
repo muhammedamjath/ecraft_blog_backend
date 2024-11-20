@@ -8,7 +8,7 @@ const jwtAuthentication  = (req,res,next)=>{
     }
     const token = authHeader.split(' ')[1]
 
-    try {
+    try {      
         const decoded = jwt.verify(token, process.env.JWT_TOCKEN_SECERT);        
         req.user = decoded;
         next();
