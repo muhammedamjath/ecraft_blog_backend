@@ -18,4 +18,5 @@ userRouter.put('/updateBlog',jwtAuthentication,userController.updateBlog)
 
 
 
+
 module.exports  = userRouter
