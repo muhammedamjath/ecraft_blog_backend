@@ -101,3 +101,5 @@ exports.updateProfile = async (req, res) => {
       .json({ message: "An error occurred while updating the profile" });
   }
 };
+
+

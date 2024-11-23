@@ -22,9 +22,11 @@ app.use('/public', express.static(path.join(__dirname, 'public')));
 const dbConnect = require('./config/connection')
 const authRouter = require('./routes/authRouter')
 const userRouter = require('./routes/userRoutes')
+const adminRouter = require('./routes/adminRouter')
 
 app.use('/auth',authRouter)
 app.use('/user',userRouter)
+app.use('/admin',adminRouter)
 
 
 

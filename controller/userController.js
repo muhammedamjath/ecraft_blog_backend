@@ -30,37 +30,60 @@ exports.blogPost = async (req, res) => {
   }
 };
 
-// Blogs that are posted
+// get Blogs that are posted
 exports.getBlogs = (req, res) => {
   const query = { type: "posted" };
   getBlogsByQuery(req, res, query);
 };
 
-// Full blogs created by the user
+// get Full blogs created by the user
 exports.getAllBlogs = (req, res) => {
   const reqUserId = req.user.id;
-  const query = { userId: reqUserId };
+  const query = { userId: new mongoose.Types.ObjectId(reqUserId) };
   getBlogsByQuery(req, res, query);
 };
 
 // get only drafted blogs
 exports.getDraftedBlogs = async (req, res) => {  
   const reqUserId = req.user.id;
-  const query = { userId: reqUserId, type: "draft" };
+  const query = { userId: new mongoose.Types.ObjectId(reqUserId), type: "draft" };
   getBlogsByQuery(req, res, query);
 };
 
 // get single blog
-exports.getsingleBlog = async (req, res) => {  
-  const blogId = req.params.id
+exports.getsingleBlog = async (req, res) => {
+  try {
+    const blogId = req.params.id;
 
-  const blog = await blogCollection.findOne({ _id: blogId });
-  if (blog) {
-    res.status(200).json(blog);
-  } else {
-    res.status(401).json({ message: "requst again" });
+    if (!mongoose.Types.ObjectId.isValid(blogId)) {
+      return res.status(400).json({ message: "Invalid blog ID" });
+    }
+
+    const blog = await blogCollection.aggregate([
+      {
+        $match: { _id:new mongoose.Types.ObjectId(blogId) },
+      },
+      {
+        $lookup: {
+          from: "registers", 
+          localField: "userId", 
+          foreignField: "_id", 
+          as: "authorDetails",
+        },
+      },
+    ]);
+
+    if (blog.length > 0) {
+      res.status(200).json(blog[0]);
+    } else {
+      res.status(404).json({ message: "Blog not found" });
+    }
+  } catch (err) {
+    console.error("Error fetching blog:", err);
+    res.status(500).json({ message: "Internal server error" });
   }
 };
+
 
 // delete blog
 exports.deleteBlog = async (req, res) => {
@@ -163,6 +186,7 @@ exports.updateBlog = async (req, res) => {
 
 // reusable function for getting blogs with diffrent query
 const getBlogsByQuery = async (req, res, query) => {
+  
   try {
     const { searchIndex, pageNumber, pageSize } = req.body;
     const reqUserId = req.user.id;
@@ -193,12 +217,25 @@ const getBlogsByQuery = async (req, res, query) => {
     const limit = parseInt(pageSize, 10) || 10;
     const skip = (page - 1) * limit;
 
-    const blogs = await blogCollection.find(query).skip(skip).limit(limit);
-    const totalBlogs = await blogCollection.countDocuments(query);
+    const blogsAggregation = await blogCollection.aggregate([
+      { $match: query },
+      {
+        $lookup: {
+          from: "registers", 
+          localField: "userId", 
+          foreignField: "_id", 
+          as: "authorDetails", 
+        },
+      },
+      { $skip: skip },
+      { $limit: limit },
+    ]);
 
+    const totalBlogs = await blogCollection.countDocuments(query);
+    
     res.status(200).json({
       status: true,
-      blogs,
+      blogs: blogsAggregation,
       totalPages: Math.ceil(totalBlogs / limit),
       currentPage: page,
       totalBlogs,
@@ -210,3 +247,4 @@ const getBlogsByQuery = async (req, res, query) => {
       .json({ status: false, errorMessage: "Internal server error" });
   }
 };
+
