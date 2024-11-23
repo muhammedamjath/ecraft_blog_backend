@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 
-const blogScema = new mongoose.Schema({
+const blogSchema = new mongoose.Schema({
   title: {
     type: String,
     required: true,
@@ -11,8 +11,8 @@ const blogScema = new mongoose.Schema({
   tags: {
     type: [String],
   },
-  content:{
-    type:String
+  content: {
+    type: String,
   },
   type: {
     type: String,
@@ -21,11 +21,15 @@ const blogScema = new mongoose.Schema({
     type: mongoose.Types.ObjectId,
     required: true,
   },
+  likedBy: {
+    type: [mongoose.Types.ObjectId],
+    default: [],
+  },
   createdAt: {
     type: Date,
     default: Date.now(),
   },
 });
 
-const blogPost = new mongoose.model("blogs", blogScema);
+const blogPost = new mongoose.model("blogs", blogSchema);
 module.exports = blogPost;

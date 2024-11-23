@@ -13,7 +13,8 @@ userRouter.get('/getSingleBlog/:id',jwtAuthentication,userController.getsingleBl
 userRouter.get('/userData',jwtAuthentication,userController.getUserData)
 userRouter.delete('/delete/:id',jwtAuthentication,userController.deleteBlog)
 userRouter.patch('/blogPost',jwtAuthentication,userController.updateType)
-userRouter.put('/updateBlog',jwtAuthentication,userController.updateBlog)
+userRouter.patch('/like',jwtAuthentication,userController.updateLike)
+userRouter.put('/updateBlog',jwtAuthentication,userController.updateLike)
 
 
 

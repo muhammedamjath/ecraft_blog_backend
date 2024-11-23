@@ -99,7 +99,6 @@ exports.deleteBlog = async (req, res) => {
       }
     }
   } catch (err) {
-    console.log(err);
     res.status(401).json();
   }
 };
@@ -173,9 +172,44 @@ exports.updateBlog = async (req, res) => {
   }
 };
 
+// add likes
+exports.updateLike = async (req, res) => {
+  try {
+    const { blogId, userId } = req.body; 
+    if (!blogId || !userId) {
+      return res.status(400).json({ message: "Blog ID and User ID are required." });
+    }
 
+    const blog = await blogCollection.findById(blogId);
+    if (!blog) {
+      return res.status(404).json({ message: "Blog not found." });
+    }
 
+    const alreadyLiked = blog.likedBy.includes(userId);
 
+    if (alreadyLiked) {
+      await blogCollection.updateOne(
+        { _id: blogId },
+        { $pull: { likedBy: userId } } 
+      );
+    } else {
+      await blogCollection.updateOne(
+        { _id: blogId },
+        { $addToSet: { likedBy: userId } } 
+      );
+    }
+
+    const updatedBlog = await blogCollection.findById(blogId);
+
+    res.status(200).json({
+      message: alreadyLiked ? "Like removed." : "Like added.",
+      likeCount: updatedBlog.likedBy.length, 
+    });
+  } catch (error) {
+    console.error("Error updating like:", error);
+    res.status(500).json({ message: "Internal server error." });
+  }
+};
 
 
 
@@ -227,6 +261,11 @@ const getBlogsByQuery = async (req, res, query) => {
           as: "authorDetails", 
         },
       },
+      {
+        $addFields: {
+          likedCount: { $size: "$likedBy" },  
+        },
+      },
       { $skip: skip },
       { $limit: limit },
     ]);
@@ -239,6 +278,7 @@ const getBlogsByQuery = async (req, res, query) => {
       totalPages: Math.ceil(totalBlogs / limit),
       currentPage: page,
       totalBlogs,
+      
     });
   } catch (err) {
     console.error("Error fetching blogs:", err);
